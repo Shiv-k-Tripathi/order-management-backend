@@ -1,0 +1,73 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "mongodb"
+  url      = env("DATABASE_URL")
+}
+
+enum OrderStatus {
+  PLACED
+  PREPARING
+  COMPLETED
+}
+
+type OrderItem {
+  itemId String @map("item_id")
+  qty    Int
+}
+
+model Store {
+  id        String   @id @default(auto()) @map("_id") @db.ObjectId
+  name      String
+  isActive  Boolean  @default(true) @map("is_active")
+  createdAt DateTime @default(now()) @map("created_at")
+
+  @@map("stores")
+}
+
+model Order {
+  id          String      @id @default(auto()) @map("_id") @db.ObjectId
+  storeId     String      @map("store_id") @db.ObjectId
+  items       OrderItem[]
+  totalAmount Float       @map("total_amount")
+  status      OrderStatus @default(PLACED)
+  createdAt   DateTime    @default(now()) @map("created_at")
+  updatedAt   DateTime    @updatedAt @map("updated_at")
+
+  @@index([storeId])
+  @@index([createdAt])
+  @@index([storeId, createdAt])
+  @@map("orders")
+}
+
+model OrderArchive {
+  id          String      @id @map("_id") @db.ObjectId
+  storeId     String      @map("store_id") @db.ObjectId
+  items       OrderItem[]
+  totalAmount Float       @map("total_amount")
+  status      OrderStatus
+  createdAt   DateTime    @map("created_at")
+  archivedAt  DateTime    @default(now()) @map("archived_at")
+
+  @@index([storeId])
+  @@index([createdAt])
+  @@map("orders_archive")
+}
+
+model Product {
+  id          String  @id @default(auto()) @map("_id") @db.ObjectId
+  name        String
+  description String?
+  price       Float
+  image       String?
+  stock       Int     @default(0)
+  isActive    Boolean @default(true)
+
+  createdAt DateTime @default(now()) @map("created_at")
+  updatedAt DateTime @updatedAt @map("updated_at")
+
+  @@index([isActive])
+  @@map("products")
+}
